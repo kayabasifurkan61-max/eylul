@@ -643,6 +643,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (garageLockScreen && garageDoorsVault) {
       garageLockScreen.style.display = 'none';
       garageDoorsVault.style.display = 'block';
+
+      // Otomatik olarak her iki garaj kapısını aç ve fotoğrafları görünür kıl
+      ['eylul', 'furkan'].forEach(bayId => {
+        const bay = document.getElementById(`bay-${bayId}`);
+        const stateText = document.getElementById(`state-text-${bayId}`);
+        const btnText = document.getElementById(`btn-text-${bayId}`);
+        if (bay) {
+          bay.classList.add('open');
+          if (stateText) stateText.textContent = 'AÇIK ✦ VIP';
+          if (btnText) btnText.textContent = `${bayId === 'eylul' ? 'Eylül' : 'Özel'} Garajını Kapat`;
+        }
+      });
+
       garageDoorsVault.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       triggerTrabzonsporConfetti();
     }
@@ -662,7 +675,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const btnText = document.getElementById(`btn-text-${bayId}`);
           if (bay) bay.classList.remove('open');
           if (stateText) stateText.textContent = 'KAPALI';
-          if (btnText) btnText.textContent = `${bayId === 'eylul' ? 'Eylül' : 'Furkan'} Garajını Aç`;
+          if (btnText) btnText.textContent = `${bayId === 'eylul' ? 'Eylül' : 'Özel'} Garajını Aç`;
         });
       }
     });
@@ -694,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnToggle.addEventListener('click', toggleDoor);
     bay.addEventListener('click', (e) => {
-      if (!e.target.closest('button')) {
+      if (!e.target.closest('button') && !e.target.closest('.jersey-img-wrap')) {
         toggleDoor();
       }
     });
@@ -703,21 +716,32 @@ document.addEventListener('DOMContentLoaded', () => {
   setupGarageBay('eylul', 'Eylül');
   setupGarageBay('furkan', 'Özel');
 
-  // Master Control: Open Both Garages at the same time
+  // Master Control: Open/Close Both Garages at the same time
   const btnOpenBothGarages = document.getElementById('btn-open-both-garages');
   if (btnOpenBothGarages) {
     btnOpenBothGarages.addEventListener('click', () => {
+      const bayEylul = document.getElementById('bay-eylul');
+      const bayFurkan = document.getElementById('bay-furkan');
+      const areBothOpen = bayEylul?.classList.contains('open') && bayFurkan?.classList.contains('open');
+
       ['eylul', 'furkan'].forEach((bayId) => {
         const bay = document.getElementById(`bay-${bayId}`);
         const stateText = document.getElementById(`state-text-${bayId}`);
         const btnText = document.getElementById(`btn-text-${bayId}`);
+        const name = bayId === 'eylul' ? 'Eylül' : 'Özel';
         if (bay) {
-          bay.classList.add('open');
-          if (stateText) stateText.textContent = 'AÇIK ✦ VIP';
-          if (btnText) btnText.textContent = `${bayId === 'eylul' ? 'Eylül' : 'Özel'} Garajını Kapat`;
+          if (areBothOpen) {
+            bay.classList.remove('open');
+            if (stateText) stateText.textContent = 'KAPALI';
+            if (btnText) btnText.textContent = `${name} Garajını Aç`;
+          } else {
+            bay.classList.add('open');
+            if (stateText) stateText.textContent = 'AÇIK ✦ VIP';
+            if (btnText) btnText.textContent = `${name} Garajını Kapat`;
+          }
         }
       });
-      triggerTrabzonsporConfetti();
+      if (!areBothOpen) triggerTrabzonsporConfetti();
     });
   }
 
@@ -922,6 +946,10 @@ document.addEventListener('DOMContentLoaded', () => {
     lightboxModal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
   };
+
+  // Expose globally for inline onclick handlers across the page
+  window.openLightbox = openLightbox;
+  window.closeLightbox = closeLightbox;
 
   if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
   if (lightboxBackdrop) lightboxBackdrop.addEventListener('click', closeLightbox);
